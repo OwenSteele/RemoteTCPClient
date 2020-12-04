@@ -1,0 +1,15 @@
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\bin\Debug\net5.0\RemoteTCPClient.exe
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\bin\Debug\net5.0\RemoteTCPClient.deps.json
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\bin\Debug\net5.0\RemoteTCPClient.runtimeconfig.json
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\bin\Debug\net5.0\RemoteTCPClient.runtimeconfig.dev.json
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\bin\Debug\net5.0\RemoteTCPClient.dll
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\bin\Debug\net5.0\ref\RemoteTCPClient.dll
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\bin\Debug\net5.0\RemoteTCPClient.pdb
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\obj\Debug\net5.0\RemoteTCPClient.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\obj\Debug\net5.0\RemoteTCPClient.AssemblyInfoInputs.cache
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\obj\Debug\net5.0\RemoteTCPClient.AssemblyInfo.cs
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\obj\Debug\net5.0\RemoteTCPClient.csproj.CoreCompileInputs.cache
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\obj\Debug\net5.0\RemoteTCPClient.dll
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\obj\Debug\net5.0\ref\RemoteTCPClient.dll
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\obj\Debug\net5.0\RemoteTCPClient.pdb
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\obj\Debug\net5.0\RemoteTCPClient.genruntimeconfig.cache
