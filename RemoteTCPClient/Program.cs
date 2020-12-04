@@ -32,13 +32,36 @@ namespace RemoteTCPClient
         }
         private static void LoopConnect()
         {
-            int attempts =0;
+            IPAddress serverIP;
+            int serverPort = 0;
+            Console.Write("Enter Server External IP: ");
+            
+            while (true)
+            {
+                string inputIP = Console.ReadLine();
+                if (IPAddress.TryParse(inputIP, out serverIP)) break;
+                else Console.Write("\r Invalid input, try again: ");
+            }
+
+            Console.Write("Enter Server Port Number: ");
+            while (true)
+            {
+                string inputPort = Console.ReadLine();
+                if (Int32.TryParse(inputPort, out serverPort))
+                {
+                    if (serverPort < 0 || serverPort > 65535) Console.Write("\r Value out of legal port bound (0 to 65535), try again: ");
+                    else break;
+                }
+                else Console.Write("\r Invalid input, try again: ");
+            }
+            int attempts = 0;
             while (!_clientSocket.Connected)
             {
                 try
                 {
                     attempts++;
-                    _clientSocket.Connect(IPAddress.Loopback, 9999);
+                    //change from IPAddress.Loopback to a remote IP to connect remotely
+                    _clientSocket.Connect(serverIP, serverPort);
                 }
                 catch (SocketException)
                 {                    
