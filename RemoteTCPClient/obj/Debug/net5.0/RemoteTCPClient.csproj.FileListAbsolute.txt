@@ -13,3 +13,4 @@ C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\obj\Debug\net5.0\Rem
 C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\obj\Debug\net5.0\ref\RemoteTCPClient.dll
 C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\obj\Debug\net5.0\RemoteTCPClient.pdb
 C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\obj\Debug\net5.0\RemoteTCPClient.genruntimeconfig.cache
+C:\Users\owenf\source\repos\RemoteTCPClient\RemoteTCPClient\obj\Debug\net5.0\RemoteTCPClient.csprojAssemblyReference.cache
