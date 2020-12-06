@@ -75,6 +75,7 @@ namespace RemoteTCPClient
                     Console.ForegroundColor = ConsoleColor.Gray;
                     Console.BackgroundColor = ConsoleColor.Black;
                     headers = true;
+                    functionTag = null;
                 }
             }
             catch (SocketException ex)
