@@ -7,6 +7,7 @@ using System.Net.Security;
 using System.Security.Authentication;
 using System.Collections;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace RemoteTCPClient
 {
@@ -17,7 +18,9 @@ namespace RemoteTCPClient
         private static Hashtable _certificateErrors = new();
 
         static void Main()
-        {    
+        {
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.BackgroundColor = ConsoleColor.Black;
             Console.Title = "OS CLIENT";
             LoopConnect();
             SendLoop();
@@ -36,7 +39,7 @@ namespace RemoteTCPClient
                 while (true)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
-                    if (headers) Console.Write("Enter server request: ");
+                    if (headers) Console.Write("$ ");
                     Console.ForegroundColor = ConsoleColor.Gray;
                     string msg;
                     while (true)
@@ -44,20 +47,17 @@ namespace RemoteTCPClient
                         msg = Console.ReadLine();
                         if (!String.IsNullOrWhiteSpace(msg)) break;
                     }
-                    byte[] sendBuffer = Encoding.ASCII.GetBytes(msg+functionTag);
-                    _clientSocket.Send(sendBuffer);
+                    SendMessage(msg + functionTag);
 
-                    byte[] receivedBuffer = new byte[2048];
-                    int recieved = _clientSocket.Receive(receivedBuffer);
-                    byte[] data = new byte[recieved];
-                    Array.Copy(receivedBuffer, data, recieved);
-                    string strData = Encoding.ASCII.GetString(data);
+                    string strData = RecieveMessage();
+
                     if (strData.Contains("<NoH>"))
                     {
                         headers = false;
                         strData = strData.Substring(5);
                     }
                     else headers = true;
+
                     if (strData.Contains("<<") && strData.Contains(">>"))
                     {
                         functionTag = strData.Substring(strData.IndexOf("<<"), (strData.IndexOf(">>")-strData.IndexOf("<<"))+2);
@@ -67,12 +67,14 @@ namespace RemoteTCPClient
 
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.BackgroundColor = ConsoleColor.DarkBlue;
-                    if (headers) Console.Write("Received: ");
+                    if (headers) Console.Write(" >> ");
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.BackgroundColor = ConsoleColor.DarkBlue;
-                    Console.WriteLine(strData);
+                    if (functionTag == null) Console.WriteLine(strData);
+                    else MultipleRequests(strData, functionTag); 
                     Console.ForegroundColor = ConsoleColor.Gray;
                     Console.BackgroundColor = ConsoleColor.Black;
+                    headers = true;
                 }
             }
             catch (SocketException ex)
@@ -86,6 +88,8 @@ namespace RemoteTCPClient
         }
         private static void LoopConnect()
         {
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.BackgroundColor = ConsoleColor.Black;
             IPAddress serverIP;
             int serverPort = 0;
             string serverName = null;
@@ -155,6 +159,75 @@ namespace RemoteTCPClient
             if (ssl) Console.WriteLine($"\nServer SSL authentication " +
                 $"{(SSLCertification.HandShake(_clientSocket, serverName) ? "successful" : "failed")}.");
         }
+        private static void SendMessage(string message)
+        {
+            byte[] sendBuffer = Encoding.ASCII.GetBytes(message);
+            _clientSocket.Send(sendBuffer);
+        }
+        private static string RecieveMessage()
+        {
+            byte[] receivedBuffer = new byte[2048];
+            int recieved = _clientSocket.Receive(receivedBuffer);
+            byte[] data = new byte[recieved];
+            Array.Copy(receivedBuffer, data, recieved);
+            return Encoding.ASCII.GetString(data);
+        }
+        private static void MultipleRequests(string data, string functionTag)
+        {
+            List<string> mutliLines = new();
+
+            if (data.Contains("#/") && data.Contains("/#"))
+            {
+                List<int[]> hashPositions = new();
+                bool lastHashFound = false;
+                int strPos = 0;
+                do
+                {
+                    if (data.Substring(strPos, data.Length - strPos).Contains("#/") && data.Substring(strPos, data.Length - strPos).Contains("/#"))
+                    {
+                        int[] hash = new int[2];
+                        hash[0] = data.Substring(strPos, data.Length - strPos).IndexOf("#/") + strPos;
+                        hash[1] = data.Substring(strPos, data.Length - strPos).IndexOf("/#") + 1 + strPos;
+
+                        int lnLen = hash[0] - strPos;
+                        if (lnLen < 0) lnLen = 0;
+                        mutliLines.Add(data.Substring(strPos, lnLen));
+                        mutliLines.Add(data.Substring(hash[0], (hash[1] - hash[0]) + 1));
+                        strPos = hash[1] + 1;
+
+                        hashPositions.Add(hash);
+                    }
+                    else lastHashFound = true;
+
+                } while (!lastHashFound);
+
+                string messageToServer = null;
+                if (mutliLines.Count > 0)
+                {
+                    for (int i = 0; i < mutliLines.Count; i++)
+                    {
+                        if (mutliLines[i].StartsWith("#/"))
+                        {
+                            switch (mutliLines[i].Substring(2, mutliLines[i].Length - 4))
+                            {
+                                case "C.RL":
+                                    string temp = Console.ReadLine();
+                                    if (!String.IsNullOrWhiteSpace(messageToServer)) messageToServer += "|";
+                                    messageToServer += temp;
+                                    break;
+                                case "C.NL":
+                                    Console.WriteLine();
+                                    break;
+                            }
+                        }
+                        else Console.Write(mutliLines[i]);
+                    }
+                    if (messageToServer != null) SendMessage(functionTag + messageToServer);
+                    Console.WriteLine(RecieveMessage());
+                }
+            }
+        }
+
         private static void GetServerInfo()
         {
             _clientSocket.Send(Encoding.ASCII.GetBytes("###`INITclientINFOrequest`###"));
