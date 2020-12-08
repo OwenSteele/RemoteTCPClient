@@ -259,7 +259,7 @@ namespace RemoteTCPClient
         }
         private static void Disconnect()
         {
-            _clientSocket.Dispose();
+            _clientSocket.Dispose(); //fix reconnect dispose error
             _clientSocket.Disconnect(true);
         }
     }
