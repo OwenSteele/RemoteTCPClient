@@ -22,9 +22,12 @@ namespace RemoteTCPClient
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.BackgroundColor = ConsoleColor.Black;
             Console.Title = "OS CLIENT";
-            LoopConnect();
-            SendLoop();
-            Console.ReadLine();
+            Console.WriteLine("CLIENT INIT>>");
+            while (true)
+            {
+                LoopConnect();
+                SendLoop();
+            }
         }
         private static void SendLoop()
         {
@@ -44,6 +47,8 @@ namespace RemoteTCPClient
                     string msg;
                     while (true)
                     {
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                        Console.BackgroundColor = ConsoleColor.Black;
                         msg = Console.ReadLine();
                         if (!String.IsNullOrWhiteSpace(msg)) break;
                     }
@@ -89,6 +94,9 @@ namespace RemoteTCPClient
         }
         private static void LoopConnect()
         {
+            Thread.Sleep(1000);
+            Console.Clear();
+
             Console.ForegroundColor = ConsoleColor.Gray;
             Console.BackgroundColor = ConsoleColor.Black;
             IPAddress serverIP;
@@ -162,8 +170,11 @@ namespace RemoteTCPClient
         }
         private static void SendMessage(string message)
         {
+            if (message == "!serverdisconnect") Disconnect();
             byte[] sendBuffer = Encoding.ASCII.GetBytes(message);
             _clientSocket.Send(sendBuffer);
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.BackgroundColor = ConsoleColor.Black;
         }
         private static string RecieveMessage()
         {
@@ -228,20 +239,28 @@ namespace RemoteTCPClient
                 }
             }
         }
-
         private static void GetServerInfo()
         {
-            _clientSocket.Send(Encoding.ASCII.GetBytes("###`INITclientINFOrequest`###"));
+            SendMessage($"###`CLIENTINFO`###  {Environment.MachineName} {GetLocalIPAddress()}");
 
-            byte[] receivedBuffer = new byte[1024];
-            int recieved = _clientSocket.Receive(receivedBuffer);
-            byte[] data = new byte[recieved];
-            Array.Copy(receivedBuffer, data, recieved);
+            string reply = RecieveMessage();
+
             Console.Clear();
             Console.WriteLine("You are now connected to the server.\n");
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine(Encoding.ASCII.GetString(data));
+            Console.WriteLine(reply);
             Console.ForegroundColor = ConsoleColor.Gray;
+        }
+        private static IPAddress GetLocalIPAddress()
+        {
+            foreach (var ip in Dns.GetHostEntry(Dns.GetHostName()).AddressList)
+                if (ip.AddressFamily == AddressFamily.InterNetwork) return ip;
+            throw new Exception("No network adapters with an IPv4 address in the system!");
+        }
+        private static void Disconnect()
+        {
+            _clientSocket.Dispose();
+            _clientSocket.Disconnect(true);
         }
     }
 }
