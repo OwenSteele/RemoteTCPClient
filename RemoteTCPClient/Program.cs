@@ -8,6 +8,7 @@ using System.Security.Authentication;
 using System.Collections;
 using System.Threading;
 using System.Collections.Generic;
+using System.IO;
 
 namespace RemoteTCPClient
 {
@@ -32,6 +33,7 @@ namespace RemoteTCPClient
         private static void SendLoop()
         {
             bool headers = true;
+            bool multipleRequests = false;
             string functionTag = null;
 
             Console.WriteLine("\n        CONNECTED! \n\n       WAIT.");
@@ -42,6 +44,8 @@ namespace RemoteTCPClient
                 while (true)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
+                    Console.BackgroundColor = ConsoleColor.Black;
+
                     if (headers) Console.Write("$ ");
                     Console.ForegroundColor = ConsoleColor.Gray;
                     string msg;
@@ -52,10 +56,12 @@ namespace RemoteTCPClient
                         msg = Console.ReadLine();
                         if (!String.IsNullOrWhiteSpace(msg)) break;
                     }
+
                     SendMessage(msg + functionTag);
 
                     string strData = RecieveMessage();
 
+                    //headers for client console to print    
                     if (strData.Contains("<NoH>"))
                     {
                         headers = false;
@@ -63,24 +69,33 @@ namespace RemoteTCPClient
                     }
                     else headers = true;
 
+                    //server function tag when sent back
                     if (strData.Contains("<<") && strData.Contains(">>"))
                     {
                         functionTag = strData.Substring(strData.IndexOf("<<"), (strData.IndexOf(">>")-strData.IndexOf("<<"))+2);
-                        strData = strData.Substring(0,strData.IndexOf("<<"));
+                        if (functionTag.Contains(".MR"))
+                        {
+                            multipleRequests = true;
+                            functionTag = functionTag.Replace(".MR", "");
+                        }
+                            strData = strData.Substring(0,strData.IndexOf("<<"));
                     }
                     else functionTag = null;
+
+                    //Request from server for action from this client
 
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.BackgroundColor = ConsoleColor.DarkBlue;
                     if (headers) Console.Write(" >> ");
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.BackgroundColor = ConsoleColor.DarkBlue;
-                    if (functionTag == null) Console.WriteLine(strData);
-                    else MultipleRequests(strData, functionTag); 
+                    if (multipleRequests) MultipleRequests(strData, functionTag);
+                    else Console.WriteLine(strData);
                     Console.ForegroundColor = ConsoleColor.Gray;
                     Console.BackgroundColor = ConsoleColor.Black;
                     headers = true;
                     functionTag = null;
+                    multipleRequests = false;
                 }
             }
             catch (SocketException ex)
@@ -151,7 +166,7 @@ namespace RemoteTCPClient
             int attempts = 0;
             while (!_clientSocket.Connected)
             {
-                Console.WriteLine($"Attempting to connect");
+                Console.WriteLine($"\nAttempting to connect");
                 try
                 {
                     attempts++;
@@ -169,8 +184,10 @@ namespace RemoteTCPClient
                 $"{(SSLCertification.HandShake(_clientSocket, serverName) ? "successful" : "failed")}.");
         }
         private static void SendMessage(string message)
-        {
-            if (message == "!serverdisconnect") Disconnect();
+        {            
+            if (message == "!sd") Disconnect();
+            message = ContainsFileFromPath(message);
+
             byte[] sendBuffer = Encoding.ASCII.GetBytes(message);
             _clientSocket.Send(sendBuffer);
             Console.ForegroundColor = ConsoleColor.Gray;
@@ -178,7 +195,7 @@ namespace RemoteTCPClient
         }
         private static string RecieveMessage()
         {
-            byte[] receivedBuffer = new byte[2048];
+            byte[] receivedBuffer = new byte[4096];
             int recieved = _clientSocket.Receive(receivedBuffer);
             byte[] data = new byte[recieved];
             Array.Copy(receivedBuffer, data, recieved);
@@ -239,6 +256,30 @@ namespace RemoteTCPClient
                 }
             }
         }
+        private static string ContainsFileFromPath(string message)
+        {
+            int pos = -1;
+            string[] parts = message.Split(' ');
+            for (int i = 0; i < parts.Length; i++) if (File.Exists(parts[i]))
+                {
+                    pos = i;
+                    break;
+                }
+            
+            if (pos != -1)
+            {
+                string path = parts[pos];
+                int lastSlash;
+                if (path.Contains('/')) lastSlash = path.LastIndexOf('/');
+                else lastSlash = path.LastIndexOf('\\');
+
+                string fileName = path.Substring(lastSlash + 1, path.Length - (lastSlash + 1));
+                byte[] fileBytes = File.ReadAllBytes(path);
+
+                return message.Replace(path,$"{fileName} {Encoding.ASCII.GetString(fileBytes)}");
+            }
+            return message;
+        }
         private static void GetServerInfo()
         {
             SendMessage($"###`CLIENTINFO`###  {Environment.MachineName} {GetLocalIPAddress()}");
@@ -260,7 +301,7 @@ namespace RemoteTCPClient
         private static void Disconnect()
         {
             _clientSocket.Dispose(); //fix reconnect dispose error
-            _clientSocket.Disconnect(true);
+            _clientSocket.Disconnect(false);
         }
     }
 }
