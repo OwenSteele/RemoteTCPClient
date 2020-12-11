@@ -72,15 +72,18 @@ namespace RemoteTCPClient
                     //server function tag when sent back
                     if (strData.Contains("<<") && strData.Contains(">>"))
                     {
-                        functionTag = strData.Substring(strData.IndexOf("<<"), (strData.IndexOf(">>")-strData.IndexOf("<<"))+2);
+                        int fTagPos = strData.IndexOf("<<");
+                        functionTag = strData.Substring(fTagPos, (strData.IndexOf(">>")- fTagPos) +2);
                         if (functionTag.Contains(".MR"))
                         {
                             multipleRequests = true;
                             functionTag = functionTag.Replace(".MR", "");
                         }
-                            strData = strData.Substring(0,strData.IndexOf("<<"));
+                        if (fTagPos != 0) strData = strData.Replace(functionTag, "");
                     }
                     else functionTag = null;
+
+                    strData = CheckFunctionTag(strData);
 
                     //Request from server for action from this client
 
@@ -89,6 +92,7 @@ namespace RemoteTCPClient
                     if (headers) Console.Write(" >> ");
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.BackgroundColor = ConsoleColor.DarkBlue;
+                    if (!strData.Contains("fileTransfer"))
                     if (multipleRequests) MultipleRequests(strData, functionTag);
                     else Console.WriteLine(strData);
                     Console.ForegroundColor = ConsoleColor.Gray;
@@ -186,8 +190,13 @@ namespace RemoteTCPClient
         private static void SendMessage(string message)
         {            
             if (message == "!sd") Disconnect();
-            message = ContainsFileFromPath(message);
-
+            if (message.Contains(" sendfile ")) message = ContainsFileFromPath(message);
+            if (message.Contains(" getfile "))
+            {
+                string[] data = message.Split(' ');
+                if (data.Length < 4) { Console.WriteLine("ERROR: message not sent to server, infomation missing."); return; }
+                if (!Directory.Exists(data[3])) { Console.WriteLine("ERROR: Directory does not exist on this machine."); return; }
+            }
             byte[] sendBuffer = Encoding.ASCII.GetBytes(message);
             _clientSocket.Send(sendBuffer);
             Console.ForegroundColor = ConsoleColor.Gray;
@@ -279,6 +288,26 @@ namespace RemoteTCPClient
                 return message.Replace(path,$"{fileName} {Encoding.ASCII.GetString(fileBytes)}");
             }
             return message;
+        }
+        private static string CheckFunctionTag(string data)
+        {
+            string[] dataArr = data.Split(' ');
+            if (dataArr.Length < 3) return "Server returned invalid info.";
+            if (dataArr[0].Contains("fileTransfer"))
+            {
+                try
+                {
+                    File.WriteAllBytes(dataArr[1], Encoding.ASCII.GetBytes(dataArr[2]));
+                    if (!File.Exists(dataArr[1])) return "File could be created - path syntax error";
+                    return "File saved";
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+                return "ERROR: file not saved";
+            }
+            return data;
         }
         private static void GetServerInfo()
         {
