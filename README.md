@@ -22,15 +22,18 @@ Can be downloaded from MDN here: https://dotnet.microsoft.com/download
 Select .NET [core/framework] runtime option and install
 
 <ins>Simple setup through GitHub</ins>
+```
 1. Download this repo as a '.zip' file, and extract once downloaded.
 2. Navigate to /RemoteTCPServer/bin/Debug/net5.
 3. Run RemoteTCPClient.exe
+```
 
 **Can also be built and run with Visual Studio**
 
 Ensure that your machine has the .NET 5.0 SDK installed
 
 <ins>Simple setup through terminal (windows)</ins>
+```
 1. cd [your chosen dir]
 2. mkdir RemoteTCPClient
 3. cd RemoteTCPClient 
@@ -38,16 +41,18 @@ Ensure that your machine has the .NET 5.0 SDK installed
 5. git clone https://github.com/OwenSteele/RemoteTCPClient.git
 6. cd /RemoteTCPServer/bin/Debug/net5.0/
 7. ./RemoteTCPClient.exe
+```
 
 *NOTE: step 5 requires the necessary access privileges*
 
 ### Starting a client
 The terminal/console will ask you for initial input:
-
+```
 * Enter the server local IP: (255.255.255.255)
 * Enter the server port number: (0 to 65535)
 * Choose to enable SSL encryption:
     If you enable SSL, you will be prompted to provide the server name (and certificate):
+```
     
 **Clients require the localIP and the port number to connect.**
 **Clients are not required to enable SSL to connect - however if enabled, clients also require the server name (key) set.**
