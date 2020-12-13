@@ -4,7 +4,7 @@
 ##### By Owen Steele 2020
 
 *This repo works alongside the other repo ./RemoteTCPServer.git*
-**The /RemoteTCPServer.git repo is set to private, please conact me (OwenSteele) to gain access privileges**
+**The /RemoteTCPServer.git repo is set to private, please contact me (OwenSteele) to gain access privileges**
 
 #### <ins>Functionality</ins>
 This Client runs on local networks only, multiple clients can be connected at once.
@@ -13,7 +13,7 @@ This Client runs on local networks only, multiple clients can be connected at on
 
 Connects via the local IP and port of the server.
 
-SSL encryption is optional. If the server is SSL enabled, it is still optional for the client to connect with encrytion.
+SSL encryption is optional. If the server is SSL enabled, it is still optional for the client to connect with encryption.
 If the client connects with SSL encryption, the server name (server certificate key) must also be entered.
 
 ### Setup and Running
@@ -45,7 +45,7 @@ Ensure that your machine has the .NET 5.0 SDK installed
 
 *NOTE: step 5 requires the necessary access privileges*
 
-### Starting a client
+## Starting a client
 The terminal/console will ask you for initial input:
 ```
 * Enter the server local IP: (255.255.255.255)
@@ -57,7 +57,7 @@ The terminal/console will ask you for initial input:
 **Clients require the localIP and the port number to connect.**
 **Clients are not required to enable SSL to connect - however if enabled, clients also require the server name (key) set.**
 
-### Stucture
+## Structure
 ```
 while (strData == null)
                     {
@@ -74,10 +74,10 @@ while (strData == null)
                         strData = RecieveMessage();
                     }
 ```
-The client uses asyncronous code to simultaneously cycle through waiting for user input and server messages
+The client uses asynchronous code to simultaneously cycle through waiting for user input and server messages
 
-### Client - Interface
-**Connect:** after enter the server metadata and information, the client will attempt to connect
+## Client - Interface
+**Connect:** after entering the server metadata and information, the client will attempt to connect
 
 **Commands:** Once connected, the client can enter commands to be sent to the server, shown by entering:
 ```
@@ -118,8 +118,8 @@ the message would be 'message starts after the IP:Handle'.
 
 clients can only message when logged in, and only request to message other client whom are also logged in, an not private.
 
-**Security:** Users can set their visiblity and security to three states, 'private', 'prompt on request' and 'auto accept'.
-              Private users cannot recieve or send anything to other clients, and cannot be seen by other clients.
-              Prompted users, must accept a request from another client before recieving data, does not apply to sending data.
+**Security:** Users can set their visibility and security to three states, 'private', 'prompt on request' and 'auto accept'.
+              Private users cannot receive or send anything to other clients, and cannot be seen by other clients.
+              Prompted users, must accept a request from another client before receiving data, does not apply to sending data.
               Auto accepting users, automatically accept any data sent to them.
 
