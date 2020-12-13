@@ -343,20 +343,23 @@ namespace RemoteTCPClient
             message = CheckFunctionTag(message);
 
         Console.Write($"Client[{ip}] has sent you a message. Accept [y/n]? ");
+            pauseInputOutput = true;
             while (true)
             {
                 ConsoleKey key = Console.ReadKey().Key;
                 if (key == ConsoleKey.Y)
                 {
                     PrintAcceptedMessage(message);
+                    pauseInputOutput = false;
                     return true;
                 }
                 else if (key == ConsoleKey.N)
                 {
                     Console.WriteLine();
+                    pauseInputOutput = false;
                     return false;
                 }
-                else Console.Write("\rInvalid input, try again [y/n]: ");
+                else Console.Write("\rInvalid input, try again [y/n]: ");                
             }
         }
         private static void PrintAcceptedMessage(string message)
