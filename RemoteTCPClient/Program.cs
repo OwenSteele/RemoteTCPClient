@@ -96,14 +96,27 @@ namespace RemoteTCPClient
 
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.BackgroundColor = ConsoleColor.DarkBlue;
-                    if (headers && !AcceptMessage) Console.Write(" >> ");
+                    if (headers && !AcceptMessage) Console.Write("\n >> ");
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.BackgroundColor = ConsoleColor.DarkBlue;
 
-                     
+
                     if (!strData.Contains("fileTransfer"))
-                    if (multipleRequests) MultipleRequests(strData, functionTag);
-                    else if (!AcceptMessage) Console.WriteLine(strData);
+                        if (multipleRequests) MultipleRequests(strData, functionTag);
+                        else if (!AcceptMessage)
+                        {
+                            if(strData.Contains(" '"))
+                            {
+                                int msgStart = strData.IndexOf(" '");
+                                int msgEnd = strData.LastIndexOf("'");
+                                Console.Write(strData.Substring(0, msgStart - 1));
+                                Console.ForegroundColor = ConsoleColor.Magenta;
+                                Console.Write(strData.Substring(msgStart, (msgEnd - msgStart)+1));
+                                Console.ForegroundColor = ConsoleColor.Gray;
+                                Console.WriteLine(strData.Substring(msgEnd, strData.Length - msgEnd));
+                            }
+                            else Console.WriteLine(strData);
+                        }
                     Console.ForegroundColor = ConsoleColor.Gray;
                     Console.BackgroundColor = ConsoleColor.Black;
                     headers = true;
@@ -373,7 +386,10 @@ namespace RemoteTCPClient
             {
                 if (dataArr.Length < 2) return "Server returned invalid info.";
                 string ip = dataArr[0].Substring(dataArr[0].IndexOf('[') + 1, dataArr[0].IndexOf(']') - (dataArr[0].IndexOf('[') + 1));
-                return $"{ip} sent: '{dataArr[1]}' <EOF>";
+
+                string message = null;
+                for (int i = 1; i < dataArr.Length; i++) message += $"{dataArr[i]} ";
+                return $"{ip} sent: '{message}' <EOF>";
             }
 
             return data;
