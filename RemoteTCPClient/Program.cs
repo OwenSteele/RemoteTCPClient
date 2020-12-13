@@ -31,12 +31,13 @@ namespace RemoteTCPClient
                 SendLoop();
             }
         }
+        public static bool pauseInputOutput = false;
         private static void SendLoop()
         {
             bool headers = true;
             bool multipleRequests = false;
             string functionTag = null;
-            bool AcceptMessage = false; 
+            bool AcceptMessage = false;
 
             Console.WriteLine("\n        CONNECTED! \n\n       WAIT.");
             Thread.Sleep(1000);
@@ -51,9 +52,9 @@ namespace RemoteTCPClient
                         CancellationTokenSource cts = new();
                         var task = Task.Run(() => {
                             try
-                            {
+                            {                                
                                 cts.CancelAfter(5000);
-                                UserInput(headers, functionTag);
+                                if (!pauseInputOutput) UserInput(headers, functionTag);
                             }
                             catch (TaskCanceledException) { }
                         });
@@ -138,8 +139,8 @@ namespace RemoteTCPClient
         {
             Console.ForegroundColor = ConsoleColor.Green;
             Console.BackgroundColor = ConsoleColor.Black;
-
-            if (headers) Console.Write("$ ");
+            Console.Write("                                                                                                                                                                                                              ");
+            if (headers) Console.Write("\r$ ");
             Console.ForegroundColor = ConsoleColor.Gray;
             string msg;
             while (true)
@@ -229,19 +230,22 @@ namespace RemoteTCPClient
                 $"{(SSLCertification.HandShake(_clientSocket, serverName) ? "successful" : "failed")}.");
         }
         private static void SendMessage(string message)
-        {            
-            if (message == "!sd") Disconnect();
-            if (message.Contains(" sendfile ")) message = ContainsFileFromPath(message);
-            if (message.Contains(" getfile "))
+        {
+            if (!pauseInputOutput)
             {
-                string[] data = message.Split(' ');
-                if (data.Length < 4) { Console.WriteLine("ERROR: message not sent to server, infomation missing."); return; }
-                if (!Directory.Exists(data[3])) { Console.WriteLine("ERROR: Directory does not exist on this machine."); return; }
+                if (message == "!sd") Disconnect();
+                if (message.Contains(" sendfile ")) message = ContainsFileFromPath(message);
+                if (message.Contains(" getfile "))
+                {
+                    string[] data = message.Split(' ');
+                    if (data.Length < 4) { Console.WriteLine("ERROR: message not sent to server, infomation missing."); return; }
+                    if (!Directory.Exists(data[3])) { Console.WriteLine("ERROR: Directory does not exist on this machine."); return; }
+                }
+                byte[] sendBuffer = Encoding.ASCII.GetBytes(message);
+                _clientSocket.Send(sendBuffer);
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.BackgroundColor = ConsoleColor.Black;
             }
-            byte[] sendBuffer = Encoding.ASCII.GetBytes(message);
-            _clientSocket.Send(sendBuffer);
-            Console.ForegroundColor = ConsoleColor.Gray;
-            Console.BackgroundColor = ConsoleColor.Black;
         }
         private static string RecieveMessage()
         {
@@ -283,6 +287,7 @@ namespace RemoteTCPClient
                 string messageToServer = null;
                 if (mutliLines.Count > 0)
                 {
+                    pauseInputOutput = true;
                     for (int i = 0; i < mutliLines.Count; i++)
                     {
                         if (mutliLines[i].StartsWith("#/"))
@@ -301,6 +306,7 @@ namespace RemoteTCPClient
                         }
                         else Console.Write(mutliLines[i]);
                     }
+                    pauseInputOutput = false;
                     if (messageToServer != null) SendMessage(functionTag + messageToServer);
                     Console.WriteLine(RecieveMessage());
                 }
