@@ -9,6 +9,7 @@ using System.Collections;
 using System.Threading;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace RemoteTCPClient
 {
@@ -35,6 +36,7 @@ namespace RemoteTCPClient
             bool headers = true;
             bool multipleRequests = false;
             string functionTag = null;
+            bool AcceptMessage = false; 
 
             Console.WriteLine("\n        CONNECTED! \n\n       WAIT.");
             Thread.Sleep(1000);
@@ -43,23 +45,21 @@ namespace RemoteTCPClient
             { 
                 while (true)
                 {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.BackgroundColor = ConsoleColor.Black;
-
-                    if (headers) Console.Write("$ ");
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                    string msg;
-                    while (true)
+                    string strData = null;
+                    while (strData == null)
                     {
-                        Console.ForegroundColor = ConsoleColor.Gray;
-                        Console.BackgroundColor = ConsoleColor.Black;
-                        msg = Console.ReadLine();
-                        if (!String.IsNullOrWhiteSpace(msg)) break;
+                        CancellationTokenSource cts = new();
+                        var task = Task.Run(() => {
+                            try
+                            {
+                                cts.CancelAfter(5000);
+                                UserInput(headers, functionTag);
+                            }
+                            catch (TaskCanceledException) { }
+                        });
+                        
+                        strData = RecieveMessage();
                     }
-
-                    SendMessage(msg + functionTag);
-
-                    string strData = RecieveMessage();
 
                     //headers for client console to print    
                     if (strData.Contains("<NoH>"))
@@ -74,11 +74,18 @@ namespace RemoteTCPClient
                     {
                         int fTagPos = strData.IndexOf("<<");
                         functionTag = strData.Substring(fTagPos, (strData.IndexOf(">>")- fTagPos) +2);
+
                         if (functionTag.Contains(".MR"))
                         {
-                            multipleRequests = true;
+                            multipleRequests = true; 
                             functionTag = functionTag.Replace(".MR", "");
                         }
+
+                        if (functionTag.Contains("client[") && functionTag.Contains("|request"))
+                        {                            
+                            AcceptMessage = AcceptClientMessage(functionTag, strData);
+                        }
+
                         if (fTagPos != 0) strData = strData.Replace(functionTag, "");
                     }
                     else functionTag = null;
@@ -89,17 +96,20 @@ namespace RemoteTCPClient
 
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.BackgroundColor = ConsoleColor.DarkBlue;
-                    if (headers) Console.Write(" >> ");
+                    if (headers && !AcceptMessage) Console.Write(" >> ");
                     Console.ForegroundColor = ConsoleColor.White;
                     Console.BackgroundColor = ConsoleColor.DarkBlue;
+
+                     
                     if (!strData.Contains("fileTransfer"))
                     if (multipleRequests) MultipleRequests(strData, functionTag);
-                    else Console.WriteLine(strData);
+                    else if (!AcceptMessage) Console.WriteLine(strData);
                     Console.ForegroundColor = ConsoleColor.Gray;
                     Console.BackgroundColor = ConsoleColor.Black;
                     headers = true;
                     functionTag = null;
                     multipleRequests = false;
+                    AcceptMessage = false;
                 }
             }
             catch (SocketException ex)
@@ -110,6 +120,24 @@ namespace RemoteTCPClient
             {
                 Console.WriteLine(ex.Message);
             }
+        }
+        private static void UserInput(bool headers,string functionTag)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.BackgroundColor = ConsoleColor.Black;
+
+            if (headers) Console.Write("$ ");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            string msg;
+            while (true)
+            {
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.BackgroundColor = ConsoleColor.Black;
+                msg = Console.ReadLine();
+                if (!String.IsNullOrWhiteSpace(msg)) break;
+            }
+
+            SendMessage(msg + functionTag);
         }
         private static void LoopConnect()
         {
@@ -164,7 +192,7 @@ namespace RemoteTCPClient
                     break;
                 }
                 else if (key == ConsoleKey.N) break;
-                else Console.Write("\rInvalid input, try again [Y/N]: ");
+                else Console.Write("\rInvalid input, try again [y/n]: ");
             }
 
             int attempts = 0;
@@ -289,12 +317,46 @@ namespace RemoteTCPClient
             }
             return message;
         }
+        private static bool AcceptClientMessage(string functionTag, string message)
+        {
+            string ip = functionTag.Substring(functionTag.IndexOf('[') + 1, functionTag.Length - (functionTag.IndexOf(']') - 1));
+            message = message.Replace(functionTag, "");
+            message = CheckFunctionTag(message);
+
+        Console.Write($"Client[{ip}] has sent you a message. Accept [y/n]? ");
+            while (true)
+            {
+                ConsoleKey key = Console.ReadKey().Key;
+                if (key == ConsoleKey.Y)
+                {
+                    PrintAcceptedMessage(message);
+                    return true;
+                }
+                else if (key == ConsoleKey.N)
+                {
+                    Console.WriteLine();
+                    return false;
+                }
+                else Console.Write("\rInvalid input, try again [y/n]: ");
+            }
+        }
+        private static void PrintAcceptedMessage(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.BackgroundColor = ConsoleColor.DarkBlue;
+            Console.Write(" >> ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.BackgroundColor = ConsoleColor.DarkBlue;
+            Console.WriteLine(message);
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.BackgroundColor = ConsoleColor.Black;
+        }
         private static string CheckFunctionTag(string data)
         {
             string[] dataArr = data.Split(' ');
-            if (dataArr.Length < 3) return "Server returned invalid info.";
             if (dataArr[0].Contains("fileTransfer"))
             {
+                if (dataArr.Length < 3) return "Server returned invalid info.";
                 try
                 {
                     File.WriteAllBytes(dataArr[1], Encoding.ASCII.GetBytes(dataArr[2]));
@@ -307,6 +369,13 @@ namespace RemoteTCPClient
                 }
                 return "ERROR: file not saved";
             }
+            if (dataArr[0].Contains("].message"))
+            {
+                if (dataArr.Length < 2) return "Server returned invalid info.";
+                string ip = dataArr[0].Substring(dataArr[0].IndexOf('[') + 1, dataArr[0].IndexOf(']') - (dataArr[0].IndexOf('[') + 1));
+                return $"{ip} sent: '{dataArr[1]}' <EOF>";
+            }
+
             return data;
         }
         private static void GetServerInfo()
