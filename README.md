@@ -83,16 +83,23 @@ The client uses asynchronous code to simultaneously cycle through waiting for us
 ```
 $ help
 ```
-**Login:** Clients can login to predefined (on server) users, default login 'user', password':
+**Login:** Clients can login to predefined (on server) users, default login 'user', 'password':
 ```
 $ login
 User: user
 Password: password
 ```
 
-**Users:** Client can log in to users as above, this data is solely held by the server.
+**Users:** Client can log in to users as above, this data is solely held by the server
 
-**Commands** The '$ help' commands will show all commands and their syntax. If a command is called incorrectly, the server will return it's 'help' information.
+<ins>**ADMIN details**</ins>
+```
+$ login
+User: admin
+Password: 12345678
+```
+
+**Commands** The 'help' commands will show all commands and their syntax. If a command is called incorrectly, the server will return the commands 'help' information.
              
 Some commands can only be accessed when logged in, or even only by the admin.           
 
@@ -106,7 +113,8 @@ $ !sd
 *After a successful login attempt, clients can access more powerful functions.*
 
 **File Transfer:** Users can send and retrieve files from the server 
-                   (requires admin to set the dir path first **!BE CAREFUL THIS SET A PATH TO SAVE FILES ON THE SERVER MACHINE, NOT THE CLIENT MACHINE!**).
+                   (requires admin to set the dir path first)
+                   **CAREFUL THIS SETS A PATH TO SAVE FILES ON THE SERVER MACHINE, NOT THE CLIENT MACHINE**.
 
 **Messaging:** Users can directly message one another, using the 'clientIP:clientHandle' as the identifier:
 ```
