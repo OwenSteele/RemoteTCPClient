@@ -103,21 +103,33 @@ namespace RemoteTCPClient
 
 
                     if (!strData.Contains("fileTransfer"))
+                    {
                         if (multipleRequests) MultipleRequests(strData, functionTag);
                         else if (!AcceptMessage)
                         {
-                            if(strData.Contains(" '"))
+                            if (strData.Contains(" '"))
                             {
-                                int msgStart = strData.IndexOf(" '");
-                                int msgEnd = strData.LastIndexOf("'");
-                                Console.Write(strData.Substring(0, msgStart - 1));
-                                Console.ForegroundColor = ConsoleColor.Magenta;
-                                Console.Write(strData.Substring(msgStart, (msgEnd - msgStart)+1));
+                                int endOfAp = strData.Length;
+                                int lastMsgEnd = 0;
+                                while (true)
+                                {
+                                    int msgStart = strData.IndexOf("'", lastMsgEnd);
+                                    int msgEnd = strData.IndexOf("'", msgStart + 2) + 1;
+                                    if (msgStart == -1 || msgEnd == -1) break;
+
+                                    Console.ForegroundColor = ConsoleColor.Gray;
+                                    Console.Write(strData.Substring(lastMsgEnd, msgStart - lastMsgEnd));
+                                    Console.ForegroundColor = ConsoleColor.Magenta;
+                                    Console.Write(strData.Substring(msgStart, (msgEnd - msgStart)));
+
+                                    lastMsgEnd = msgEnd;
+                                }
                                 Console.ForegroundColor = ConsoleColor.Gray;
-                                Console.WriteLine(strData.Substring(msgEnd, strData.Length - msgEnd));
+                                Console.WriteLine(strData.Substring(endOfAp, strData.Length - endOfAp));
                             }
                             else Console.WriteLine(strData);
                         }
+                    }
                     Console.ForegroundColor = ConsoleColor.Gray;
                     Console.BackgroundColor = ConsoleColor.Black;
                     headers = true;
